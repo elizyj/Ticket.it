@@ -7,12 +7,19 @@
  import "@openzeppelin/contracts/utils/Strings.sol";
  
  error InvalidTokenId(uint tokenId);
+
+ interface ISVGRenderer {
+   function render(uint _tokenId) external view returns (string memory);
+ }
  
  contract Ticket is ERC721 {
      uint public counter;
+
+     ISVGRenderer SVGRenderer;
  
-     constructor() ERC721("Land, Sea, and Sky", "LSS") {}
- 
+     constructor(address _SVGRenderer) ERC721("Land, Sea, and Sky", "LSS") {
+         SVGRenderer = ISVGRenderer(_SVGRenderer);
+     }
      function mint() public {
          counter++;
          _safeMint(msg.sender, counter);
@@ -30,13 +37,13 @@
          string memory json = Base64.encode(
              bytes(
              string(
-                 abi.encodePacked(
-                 '{"name": "Land, Sea, and Sky #: ',
-                 Strings.toString(_tokenId),
-                 '", "description": "Land, Sea, and Sky is a collection of generative art pieces stored entirely onchain.", "image": "data:image/SVG+xml;base64,',
-                 "TODO: Build the SVG with the token ID as the seed",
-                 '"}'
-                 )
+                     abi.encodePacked(
+                         '{"name": "Land, Sea, and Sky #: ',
+                         Strings.toString(_tokenId),
+                         '", "description": "Land, Sea, and Sky is a collection of generative art pieces stored entirely onchain.", "image": "data:image/SVG+xml;base64,',
+                         Base64.encode(bytes(SVGRenderer.render(_tokenId))),
+                         '"}'
+                     )
              )
              )
          );
